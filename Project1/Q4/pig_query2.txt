@@ -1,0 +1,34 @@
+/*
+Write an Apache Pig query that join Customers and Transactions using Broadcast (replicated) join. The query reports for each customer the following info: 
+  CustomerID, Name, Salary, NumOf Transactions, TotalSum, MinItem
+number of transaction  total number of transaction, 
+totalsum  is sum of transtotal
+minum number of item in transaction
+*/
+
+
+A = LOAD 'customers.csv' using PigStorage(',') AS (ID:int, Name:chararray, Age:int, CountryCode:int, Salary:float);
+
+--load transactions
+B = LOAD 'transactions.csv' using PigStorage(',') AS (TransID:int, CustID:int, TransTotal:float, TransNumItems:int, TransDesc:chararray);
+
+--group by custID in transactions
+C1= GROUP B by CustID;
+
+
+--get 
+
+ D = foreach C1 GENERATE group AS CUSTID , COUNT(B) AS NumOfTransactions, SUM(B.TransTotal) AS TotalSum, MIN(B.TransNumItems) AS MinItem ;
+
+--join A table to get ID, Name Salary
+E = JOIN D BY CUSTID, A by ID Using 'replicated';
+
+
+-select needed column 
+F = foreach E generate ID as CustomerID, Name, Salary, NumOfTransactions, TotalSum, MinItem;
+
+--store
+STORE F  INTO 'PIG_Q2.csv' USING PigStorage(',');
+
+
+

@@ -1,0 +1,19 @@
+Write  an  Apache  Pig  query  that  reports  the  Country  Codes  having  number  of  customers  greater  than 5000 or less than 2000
+
+--load customers 
+A = LOAD 'customers.csv' using PigStorage(',') AS (ID:int, Name:chararray, Age:int, CountryCode:int, Salary:float);
+
+--load transactions
+B = LOAD 'transactions.csv' using PigStorage(',') AS (TransID:int, CustID:int, TransTotal:float, TransNumItems:int, TransDesc:chararray);
+
+--group by country codes to count customers
+C5=  GROUP A by CountryCode;
+
+--Count  customers
+D5 = foreach C5 GENERATE group AS Countrycode , COUNT(A) AS CustomerNumber;
+
+--filter only countryocde with customer number < =2000 or >=5000
+E5 = FILTER D5 BY (CustomerNumber <2000) or (CustomerNumber> 5000);
+
+--storage 
+STORE E5  INTO 'PIG_Q3.csv' USING PigStorage(',');

@@ -1,0 +1,30 @@
+Pig query1
+
+--load customers 
+A = LOAD 'customers.csv' using PigStorage(',') AS (ID:int, Name:chararray, Age:int, CountryCode:int, Salary:float);
+
+--load transactions
+B = LOAD 'transactions.csv' using PigStorage(',') AS (TransID:int, CustID:int, TransTotal:float, TransNumItems:int, TransDesc:chararray);
+
+--group by custID in transactions
+C1= GROUP B by CustID;
+
+--count transaction
+D3 = foreach C1 GENERATE group AS CUSTID , COUNT(B) AS TRANSNUMBER;
+
+--highest and lowest based on transaction number
+D3_ORDERED_DESC = ORDER D3 BY TRANSNUMBER DESC; 
+D3_ORDERED_ASC = ORDER D3 BY TRANSNUMBER ASC;
+
+--filter in the id with lowest transaction number
+E2 = FILTER D3 BY CUSTID == 24608;  
+
+--join with customer table
+F2 = join A by ID, E2 by CUSTID;
+
+--only show name and transnumber
+G2= foreach F2 generate Name, TRANSNUMBER;
+
+
+
+
