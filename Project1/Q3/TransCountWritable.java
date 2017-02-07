@@ -15,7 +15,9 @@ public class TransCountWritable implements WritableComparable<TransCountWritable
 	private float total;
 	private int minItems;
 	
-	public TransCountWritable() {}
+	public TransCountWritable() {
+		this.minItems = Integer.MAX_VALUE;
+	}
 	
 	public TransCountWritable(int customerId) {
 		this.customerId = customerId;
