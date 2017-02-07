@@ -137,7 +137,7 @@ public class Query3 {
 		private Text result = new Text();
 		
 		/**
-		 * Join data nd aggregate results.
+		 * Join data and aggregate results.
 		 *
 		 */
 		public void reduce(IntWritable key,
@@ -151,7 +151,7 @@ public class Query3 {
 
 			for (TransCountWritable trans : values) {
 				
-//				if this trans contains customer info
+//				if this trans only contains customer info
 				if(trans.getCount() == 0){
 					custInfo = trans.toCustomerString();
 				}
