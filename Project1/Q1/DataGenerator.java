@@ -26,7 +26,8 @@ public class DataGenerator {
 //		CountryCode:	random	number	(integer)	between	1	and	10
 //		Salary:	random	number	(float)	between	100	and	10000
 
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter("customers.csv"))) {
+		BufferedWriter bw = null;
+		try {
 			
 			int id;
 			int age;
@@ -34,6 +35,7 @@ public class DataGenerator {
 			String name;
 			float salary;
 			
+			bw = new BufferedWriter(new FileWriter("customers.csv"));
 			for(id=1 ; id<50001 ; id++){
 				age = random.nextInt(61) + 10;
 				countryCode = random.nextInt(10) + 1;
@@ -43,9 +45,17 @@ public class DataGenerator {
 			}
 
 		} catch (IOException e) {
-
 			e.printStackTrace();
-
+		}
+		finally{
+			try{
+				if (bw != null){
+				bw.close();
+				}
+			}
+			catch(IOException e){
+				e.printStackTrace();
+			}
 		}
 		
 //		The	Transactions dataset:
@@ -55,7 +65,7 @@ public class DataGenerator {
 //		TransNumItems:	random	number	(integer)	between	1	and	10
 //		TransDesc:	random	text	of	characters	of	length	between	20	and	50	(do	not	include	commas)
 		
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter("transactions.csv"))) {
+		try  {
 
 			int id;
 			int custID;
@@ -63,7 +73,7 @@ public class DataGenerator {
 			int transNumItems;
 			String transDesc;
 			
-			
+			bw = new BufferedWriter(new FileWriter("transactions.csv"));
 			for(id=1 ; id<5000001 ; id++){
 				custID = random.nextInt(50000) + 1;
 				transTotal = (random.nextFloat()*990)+10;
@@ -74,9 +84,17 @@ public class DataGenerator {
 			}
 
 		} catch (IOException e) {
-
 			e.printStackTrace();
-
+		}
+		finally{
+			try{
+				if (bw != null){
+				bw.close();
+				}
+			}
+			catch(IOException e){
+				e.printStackTrace();
+			}
 		}
 		System.out.println("Done");
 	}
