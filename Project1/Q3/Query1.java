@@ -7,6 +7,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -46,10 +47,7 @@ public class Query1 {
 		Job job = Job.getInstance(conf, "Query1");
 		job.setJarByClass(Query1.class);
 		job.setMapperClass(Q1Mapper.class);
-		// job.setReducerClass(Q2Reducer.class);
-		// job.setCombinerClass(MRReducer.class);
-		// job.setPartitionerClass(MRPartioner.class);
-		job.setOutputKeyClass(Text.class);
+		job.setOutputKeyClass(NullWritable.class);
 		job.setOutputValueClass(Text.class);
 
 		FileInputFormat.addInputPath(job, new Path(input));
@@ -58,12 +56,11 @@ public class Query1 {
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
 
-	public static class Q1Mapper extends Mapper<LongWritable, Text, Text, Text> {
-
-//		TODO: The assignment doesn't specify, but maybe it would be better to output the entire record, not just the id and name? 
-//		probably the primary key would be the first id field
-		private Text ID = new Text();
-		private Text name = new Text();
+	/**
+	 * Filter customers based on country code between 2 and 6 inclusive.
+	 *
+	 */
+	public static class Q1Mapper extends Mapper<LongWritable, Text, NullWritable, Text> {
 
 		public void map(LongWritable key, Text value, Context context)
 				throws IOException, InterruptedException {
@@ -72,26 +69,9 @@ public class Query1 {
 			String[] tokens = value.toString().split(",");
 			int countrycode = Integer.parseInt(tokens[3]);
 			if (countrycode >= 2 && countrycode <= 6) {
-				ID.set(tokens[3]);
-				name.set(tokens[1]);
-				context.write(ID, name);
+				
+				context.write(NullWritable.get(), value);
 			}
 		}
 	}
-
-	public static class Q1Reducer extends
-			Reducer<Text, IntWritable, Text, IntWritable> {
-		private IntWritable result = new IntWritable();
-
-		public void reduce(Text key, Iterable<IntWritable> values,
-				Context context) throws IOException, InterruptedException {
-			int sum = 0;
-			for (IntWritable val : values) {
-				sum += val.get();
-			}
-			result.set(sum);
-			context.write(key, result);
-		}
-	}
-
 }
