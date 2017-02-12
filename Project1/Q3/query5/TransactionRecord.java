@@ -1,4 +1,4 @@
-package query5;
+package Q3.query5;
 
 import java.io.DataInput;
 import java.io.DataOutput;

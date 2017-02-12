@@ -1,4 +1,4 @@
-package query5;
+package Q3.query5;
 
 import org.apache.hadoop.io.GenericWritable;
 import org.apache.hadoop.io.Writable;

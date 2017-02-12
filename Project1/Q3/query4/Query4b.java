@@ -1,4 +1,4 @@
-package query4b;
+package Q3.query4;
 
 import java.io.IOException;
 

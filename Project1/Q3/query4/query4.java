@@ -1,6 +1,4 @@
-package query4;
-
-
+package Q3.query4;
 
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;

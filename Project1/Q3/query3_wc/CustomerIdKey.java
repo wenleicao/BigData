@@ -1,4 +1,4 @@
-package query3;
+package Q3.query3_wc;
 
 import java.io.DataInput;
 import java.io.DataOutput;
