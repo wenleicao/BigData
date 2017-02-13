@@ -17,6 +17,7 @@ public class Trans4Writable implements Writable{
 	
 	public Trans4Writable() {
 		this.minTotal = Float.MAX_VALUE;
+		this.customers = new HashSet<Integer>();
 	}
 	
 	public Trans4Writable(int id, float total){

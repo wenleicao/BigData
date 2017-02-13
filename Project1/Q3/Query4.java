@@ -170,6 +170,7 @@ public class Query4 {
 			sb.append(numCust);
 			sb.append(",");
 			sb.append(minTrans);
+			sb.append(",");
 			sb.append(maxTrans);
 			result.set(sb.toString());
 
