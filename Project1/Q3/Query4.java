@@ -67,7 +67,7 @@ public class Query4 {
 
 		job.setMapperClass(Q4TransactionMapper.class);
 		job.setReducerClass(Q4Reducer.class);
-		job.setCombinerClass(Q4Combiner.class);
+//		job.setCombinerClass(Q4Combiner.class);
 		job.setOutputKeyClass(NullWritable.class);
 		job.setOutputValueClass(Text.class);
 
