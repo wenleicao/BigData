@@ -1,4 +1,4 @@
-package Q2;
+package json;
 
 import java.io.IOException;
 
@@ -7,14 +7,12 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
-//import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-
 
 public class Q2 {
 
@@ -50,13 +48,13 @@ public class Q2 {
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(IntWritable.class);
 
-		//job.setCombinerClass(Q2Combiner.class);
+		// job.setCombinerClass(Q2Combiner.class);
 
 		FileInputFormat.addInputPath(job, new Path(input));
-				
-		//set file input split size 5* default block size (64M) 
-		FileInputFormat.setMinInputSplitSize(job, 5*67108864l);
-		
+
+		// set file input split size 5* default block size (64M)
+		FileInputFormat.setMinInputSplitSize(job, 5 * 67108864l);
+
 		FileOutputFormat.setOutputPath(job, new Path(output));
 
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
@@ -81,7 +79,7 @@ public class Q2 {
 			String[] tokens = value.toString().split(",");
 			String id = tokens[5];
 			id_key.set(id);
-						
+
 			tcount.set(1);
 			context.write(id_key, tcount);
 		}
@@ -90,9 +88,8 @@ public class Q2 {
 	public static class Q2Reducer extends
 			Reducer<Text, IntWritable, Text, IntWritable> {
 
-		//private Text result = new Text();
+		// private Text result = new Text();
 		private IntWritable totalcount = new IntWritable();
-		
 
 		/**
 		 * Aggregate transactions per customer.
@@ -104,26 +101,19 @@ public class Q2 {
 		 * @throws InterruptedException
 		 */
 		// output format: CustomerID, NumTransactions, TotalSum
-		public void reduce(Text key,
-				Iterable<IntWritable> values, Context context)
-				throws IOException, InterruptedException {
+		public void reduce(Text key, Iterable<IntWritable> values,
+				Context context) throws IOException, InterruptedException {
 
 			int numCount = 0;
-			
 
 			for (IntWritable trans : values) {
-			numCount +=  Integer.parseInt(trans.toString());
+				numCount += Integer.parseInt(trans.toString());
 			}
 			totalcount.set(numCount);
-			
-			//result.set(key.toString() + "," + numTrans + "," + totalSum);
+
+			// result.set(key.toString() + "," + numTrans + "," + totalSum);
 			context.write(key, totalcount);
 		}
 	}
 
-	
-	}
-
-
-
-
+}
