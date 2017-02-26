@@ -1,7 +1,7 @@
-package json;
+
 import java.io.IOException;
 
-import json.JsonRecordReader;
+
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -20,7 +20,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
  *
  */
 public class JsonInputFormat extends FileInputFormat<LongWritable, Text> {
-
+	private static final long MAX_SPLIT_SIZE = 1522428;  // airfield size's 1/5  204800,  full size 1,022,428
 	@Override
 	public RecordReader<LongWritable, Text> createRecordReader(
 			InputSplit split, TaskAttemptContext context) throws IOException,
@@ -29,5 +29,11 @@ public class JsonInputFormat extends FileInputFormat<LongWritable, Text> {
 		jsonreader.initialize(split, context);
 		return jsonreader;
 	}
+	
+	@Override
+	 protected long computeSplitSize(long blockSize, long minSize, long maxSize) {
+	  return super.computeSplitSize(blockSize, minSize, MAX_SPLIT_SIZE);
+	 }
+		
 
 }

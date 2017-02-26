@@ -1,4 +1,4 @@
-package json;
+
 
 import java.io.IOException;
 
@@ -59,7 +59,7 @@ public class JsonRecordReader extends RecordReader<LongWritable, Text> {
 
 		// read lines until we reach end of split or record
 		while (in.nextKeyValue()) {
-				line = in.getCurrentValue().toString().trim();
+				line = in.getCurrentValue().toString().trim().replaceAll("\"", "");
 				
 				if (line.equals("}") || line.equals("},")){ //end of record
 					break;
