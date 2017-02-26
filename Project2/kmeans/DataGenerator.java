@@ -20,33 +20,25 @@ public class DataGenerator {
 
 	public static void main(String[] args) {
 
-		// The Customers dataset:
-		// ID: unique sequential number (integer) from 1 to 50,000 (that is the
-		// file will have 50,000 line)
-		// Name: random sequence of characters of length between 10 and 20 (do
-		// not include commas)
-		// Age: random number (integer) between 10 to 70
-		// CountryCode: random number (integer) between 1 and 10
-		// Salary: random number (float) between 100 and 10000
+		/**
+		 * Generator for kmeans data.
+		 * Generates set of random 2d points in space.
+		 * Space assumed to be 2d from 1 to 10000 along each axis
+		 */
 
 		BufferedWriter bw = null;
 		try {
 
+			int x;
+			int y;
 			int id;
-			int age;
-			int countryCode;
-			String name;
-			float salary;
 
-			bw = new BufferedWriter(new FileWriter("customers.csv"));
-			for (id = 1; id < 50001; id++) {
-				age = random.nextInt(61) + 10;
-				countryCode = random.nextInt(10) + 1;
-				name = RandomStringUtils
-						.randomAlphabetic(random.nextInt(11) + 10);
-				salary = (random.nextFloat() * 9900) + 100;
-				bw.write(id + "," + name + "," + age + "," + countryCode + ","
-						+ salary + "\n");
+			bw = new BufferedWriter(new FileWriter("kmeanspoints.csv"));
+			for (id = 1; id < 12000000; id++) {
+				
+				x = random.nextInt(10000);
+				y = random.nextInt(10000);
+				bw.write(x + "," + y + "\n");
 			}
 
 		} catch (IOException e) {
@@ -61,47 +53,6 @@ public class DataGenerator {
 			}
 		}
 
-		// The Transactions dataset:
-		// TransID: unique sequential number (integer) from 1 to 5,000,000 (the
-		// file has 5M transactions)
-		// CustID: References one of the customer IDs, i.e., from 1 to 50,000
-		// (on Avg. a customer has 100 trans.)
-		// TransTotal: random number (float) between 10 and 1000
-		// TransNumItems: random number (integer) between 1 and 10
-		// TransDesc: random text of characters of length between 20 and 50 (do
-		// not include commas)
-
-		try {
-
-			int id;
-			int custID;
-			float transTotal;
-			int transNumItems;
-			String transDesc;
-
-			bw = new BufferedWriter(new FileWriter("transactions.csv"));
-			for (id = 1; id < 5000001; id++) {
-				custID = random.nextInt(50000) + 1;
-				transTotal = (random.nextFloat() * 990) + 10;
-				transNumItems = random.nextInt(10) + 1;
-				transDesc = RandomStringUtils.randomAlphabetic(random
-						.nextInt(31) + 20);
-
-				bw.write(id + "," + custID + "," + transTotal + ","
-						+ transNumItems + "," + transDesc + "\n");
-			}
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				if (bw != null) {
-					bw.close();
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
 		System.out.println("Done");
 	}
 
