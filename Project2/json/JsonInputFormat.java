@@ -1,3 +1,4 @@
+package json;
 
 import java.io.IOException;
 
@@ -26,7 +27,7 @@ public class JsonInputFormat extends FileInputFormat<LongWritable, Text> {
 			InputSplit split, TaskAttemptContext context) throws IOException,
 			InterruptedException {
 		JsonRecordReader jsonreader = new JsonRecordReader();
-		jsonreader.initialize(split, context);
+//		jsonreader.initialize(split, context);
 		return jsonreader;
 	}
 	
