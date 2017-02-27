@@ -63,6 +63,7 @@ public class KMeansMapper extends
 			int i = 0;
 			while ((line = fis.readLine()) != null) {
 				centroids[i] = new PointWritable(line);
+				centroids[i].setId(i);
 				i++;
 			}
 			return centroids;

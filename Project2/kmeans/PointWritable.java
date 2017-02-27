@@ -8,21 +8,18 @@ import org.apache.hadoop.io.WritableComparable;
 
 public class PointWritable implements WritableComparable<PointWritable> {
 
-	int x;
-	int y;
+//	id used by centroids
+	int id;
+	double x;
+	double y;
+//	count of points when aggregating
 	int c;
-	int x_sum;
-	int y_sum;
+//	sum of points when aggregating
 
 	public PointWritable() {
 	}
 
-	public PointWritable(int x, int y) {
-		this.x = x;
-		this.y = y;
-	}
-
-	public PointWritable(int x, int y, int c) {
+	public PointWritable(double x, double y, int c) {
 		this.x = x;
 		this.y = y;
 		this.c = c;
@@ -30,33 +27,31 @@ public class PointWritable implements WritableComparable<PointWritable> {
 
 	public PointWritable(String line) {
 		String[] split = line.split(",");
-		this.x = Integer.parseInt(split[0]);
-		this.y = Integer.parseInt(split[1]);
+		this.x = Double.parseDouble(split[0]);
+		this.y = Double.parseDouble(split[1]);
 	}
 	
 	public PointWritable(String line, int c) {
 		String[] split = line.split(",");
-		this.x = Integer.parseInt(split[0]);
-		this.y = Integer.parseInt(split[1]);
+		this.x = Double.parseDouble(split[0]);
+		this.y = Double.parseDouble(split[1]);
 		this.c=c;
 	}
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
-		x = in.readInt();
-		y = in.readInt();
-		c = in.readInt();
-		x_sum = in.readInt();
-		y_sum = in.readInt();
+		this.id = in.readInt();
+		this.x = in.readDouble();
+		this.y = in.readDouble();
+		this.c = in.readInt();
 	}
 
 	@Override
 	public void write(DataOutput out) throws IOException {
-		out.writeInt(x);
-		out.writeInt(y);
+		out.writeInt(id);
+		out.writeDouble(x);
+		out.writeDouble(y);
 		out.writeInt(c);
-		out.writeInt(x_sum);
-		out.writeInt(y_sum);
 	}
 
 	@Override
@@ -72,37 +67,35 @@ public class PointWritable implements WritableComparable<PointWritable> {
 
 	public void addPoint(PointWritable p) {
 
-		this.x_sum += p.x;
-		this.y_sum += p.y;
-		this.c +=p.c;
+		if(this.c == 0){
+			this.x = p.x;
+			this.y = p.y;
+			this.c = p.c;
+		}
+		else{
+			double x = (this.x*c) + (p.x*p.c);
+			double y = (this.y*c) + (p.y*p.c);
+			this.c += p.c;
+			this.x =  (x/this.c);
+			this.y = (y/this.c);
+		}
 	}
 	
-	public void addPoints(int x_sum, int y_sum, int c) {
-
-		this.x_sum += x_sum;
-		this.y_sum += y_sum;
-		this.c +=c;
-	}
+	
 
 	public void clear() {
 		this.x = 0;
 		this.y = 0;
 		this.c = 0;
 	}
-
-	public void update() {
-
-		if (c == 0) {
-			this.clear();
-		} else {
-			this.x = this.x_sum / c;
-			this.y = this.y_sum / c;
-		}
-	}
 	
 	@Override
-//	returns 0 if x and y are the same
+//	based on id, used for centroids only
 	public int compareTo(PointWritable p){
-		return (this.x-p.x)+(this.y-p.y);
+		return (this.id - p.id);
+	}
+	
+	public void setId(int id){
+		this.id = id;
 	}
 }
