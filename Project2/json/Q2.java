@@ -1,4 +1,4 @@
-
+package json;
 
 import java.io.IOException;
 
@@ -17,7 +17,7 @@ import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
-public class Query2 {
+public class Q2 {
 
 	private static String input;
 	private static String output;
@@ -43,7 +43,7 @@ public class Query2 {
 		}
 
 		Job job = Job.getInstance(conf, "Query2");
-		job.setJarByClass(Query2.class);
+		job.setJarByClass(Q2.class);
 		
 		// use custom input format
 		job.setInputFormatClass(JsonInputFormat.class);

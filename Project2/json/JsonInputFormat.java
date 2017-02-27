@@ -1,4 +1,4 @@
-
+package json;
 
 import java.io.IOException;
 
@@ -12,7 +12,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 
 /**
- * Jason input format parses json files. It reads a ingle json record as a line
+ * Jason input format parses json files. It reads a single json record
  * and passes it to the map or reduce function as a string of commas separated
  * values.
  * 
@@ -22,12 +22,12 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
  */
 public class JsonInputFormat extends FileInputFormat<LongWritable, Text> {
 	private static final long MAX_SPLIT_SIZE = 204800;  // airfield size's 1/5  204800,  full size 1,022,428
+	
 	@Override
 	public RecordReader<LongWritable, Text> createRecordReader(
 			InputSplit split, TaskAttemptContext context) throws IOException,
 			InterruptedException {
 		JsonRecordReader jsonreader = new JsonRecordReader();
-//		jsonreader.initialize(split, context);
 		return jsonreader;
 	}
 	

@@ -1,4 +1,4 @@
-
+package json;
 
 import java.io.IOException;
 
@@ -36,6 +36,7 @@ public class JsonRecordReader extends RecordReader<LongWritable, Text> {
 
 	private long backup;
 
+	@Override
 	public void initialize(InputSplit genericSplit, TaskAttemptContext context)
 			throws IOException {
 
@@ -64,6 +65,7 @@ public class JsonRecordReader extends RecordReader<LongWritable, Text> {
 
 	}
 
+	@Override
 	public boolean nextKeyValue() throws IOException {
 		if (key == null) {
 			key = new LongWritable();
@@ -97,8 +99,18 @@ public class JsonRecordReader extends RecordReader<LongWritable, Text> {
 		}
 	}
 
-	public long readJsonRecord(Text str, int maxLineLength, int maxBytesToConsume)
-			throws IOException{
+	
+	/**
+	 * Helper function reads multiple lines that make up one record.
+	 * 
+	 * @param str
+	 * @param maxLineLength
+	 * @param maxBytesToConsume
+	 * @return
+	 * @throws IOException
+	 */
+	public long readJsonRecord(Text str, int maxLineLength,
+			int maxBytesToConsume) throws IOException {
 
 		// append all fields in record to a single line
 		str.clear();
@@ -106,11 +118,11 @@ public class JsonRecordReader extends RecordReader<LongWritable, Text> {
 		// read opening brace
 		long count = in.readLine(value, maxLineLength,
 				Math.max(maxBytesToConsume(pos), maxLineLength));
-		
+
 		if (count == 0) {
 			return count; // lineReader reached end of split
 		}
-		
+
 		StringBuffer sb = new StringBuffer();
 		String line = null;
 		long next;
@@ -118,18 +130,16 @@ public class JsonRecordReader extends RecordReader<LongWritable, Text> {
 		while (true) {
 			next = in.readLine(value, maxLineLength,
 					Math.max(maxBytesToConsume(pos), maxLineLength));
-			if(next == 0){
+			if (next == 0) {
 				break;
-			}
-			else{
+			} else {
 				count += next;
 			}
 			line = value.toString().trim().replaceAll("\"", "");
 
 			if (line.equals("}") || line.equals("},")) { // end of record
 				break;
-			} 
-			else {
+			} else {
 				sb.append(line);
 			}
 
@@ -139,7 +149,7 @@ public class JsonRecordReader extends RecordReader<LongWritable, Text> {
 			// save new text value
 			str.set(sb.toString());
 			return count;
-			
+
 		} else { // end of split can't read this record
 			return 0;
 		}
