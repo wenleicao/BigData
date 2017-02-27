@@ -62,12 +62,14 @@ public class Q1 {
 			} 
 			else {
 //				default is entire domain space
-				window = new RectangleWritable(-1, 0, 0, 10000, 10000);
+//				window = new RectangleWritable(-1, 0, 0, 10000, 10000);
+				window = new RectangleWritable(-1, 0, 0, 20, 10);
 			}
 			
 //			set grid size between 100 and 1000
-			GRID_SIZE = Math.min(window.w/100, window.h/100);
-			GRID_SIZE = Math.min(GRID_SIZE, 100); 
+//			GRID_SIZE = Math.min(window.w/100, window.h/100);
+//			GRID_SIZE = Math.min(GRID_SIZE, 100); 
+			GRID_SIZE = 2;
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(0);
