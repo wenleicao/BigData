@@ -12,11 +12,13 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class Q1 {
 
-	private static String input;
+	private static String input_points;
+	private static String input_rec;
 	private static String output;
 	private static int[] window;
 
@@ -24,15 +26,17 @@ public class Q1 {
 
 		// pass input and output paths as args
 		try {
-			input = args[0];
-			output = args[1];
+			input_points = args[0];
+			input_rec = args[1];
+			output = args[2];
 			
 //			optional window param
 //			format:W(x1,y1,x2,y2)	
 			
-			if(args.length > 2){
-				args[2].subSequence(2, args[2].length()-2);
-				String[] split = args[2].split(",");
+			if(args.length > 3){
+				window = new int[4];
+				String win = (String) args[3].subSequence(2, args[3].length()-2);
+				String[] split = win.split(",");
 				for(int i=0 ; i<split.length ; i++){
 					window[i]=Integer.parseInt(split[i]);
 				}
@@ -41,6 +45,7 @@ public class Q1 {
 			e.printStackTrace();
 			System.exit(0);
 		}
+	
 		Configuration conf = new Configuration();
 		
 		// delete old output directories if they exist
@@ -51,7 +56,7 @@ public class Q1 {
 
 		Job job = Job.getInstance(conf, "Query2");
 		job.setJarByClass(Q1.class);
-		job.setInputFormatClass(JsonInputFormat.class);
+		job.setInputFormatClass(TextInputFormat.class);
 		job.setMapperClass(Q2Mapper.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(IntWritable.class);
@@ -60,13 +65,7 @@ public class Q1 {
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(IntWritable.class);
 
-		// job.setCombinerClass(Q2Combiner.class);
-
 		FileInputFormat.addInputPath(job, new Path(input));
-
-		// set file input split size 5* default block size (64M)
-		FileInputFormat.setMinInputSplitSize(job, 5 * 67108864l);
-
 		FileOutputFormat.setOutputPath(job, new Path(output));
 
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
