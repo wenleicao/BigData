@@ -69,7 +69,7 @@ public class DataGenerator {
 				h = random.nextInt(20) + 1;
 				w = random.nextInt(5) + 1;
 				
-				bw.write(x +","+ y +","+ h+","+ w +"\n");
+				bw.write(id + "," + x +","+ y +","+ h+","+ w +"\n");
 			}
 
 		} catch (IOException e) {
