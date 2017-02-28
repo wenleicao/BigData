@@ -3,6 +3,7 @@ package kmeans;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URI;
 import java.util.ArrayList;
 
 import org.apache.hadoop.conf.Configuration;
@@ -56,15 +57,16 @@ public class KMeansReducer extends
 	public PointWritable[] readCentroids(String centroidFile,
 			Configuration conf, int k) throws IOException {
 
-		PointWritable[] centroids = new PointWritable[k];
 		FileSystem fs = FileSystem.get(conf);
-		BufferedReader fis = null;
-		FSDataInputStream in = fs.open(new Path(centroidFile));
+		URI[] cacheFiles = DistributedCache.getCacheFiles(conf);
+		Path getPath = new Path(cacheFiles[0].getPath());
+		BufferedReader bf = null;
 		try {
-			fis = new BufferedReader(new InputStreamReader(in));
+			bf = new BufferedReader(new InputStreamReader(
+					fs.open(getPath)));
 			String line;
 			int i = 0;
-			while ((line = fis.readLine()) != null) {
+			while ((line = bf.readLine()) != null) {
 				centroids[i] = new PointWritable(line);
 				i++;
 			}
@@ -75,9 +77,8 @@ public class KMeansReducer extends
 							+ centroidFile + "'");
 			return null;
 		} finally {
-			if (in != null) {
-				fis.close();
-				in.close();
+			if (bf != null) {
+				bf.close();
 			}
 		}
 	}

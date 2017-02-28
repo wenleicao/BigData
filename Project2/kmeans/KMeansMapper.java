@@ -3,6 +3,7 @@ package kmeans;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URI;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
@@ -12,7 +13,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.Mapper.Context;
 
 public class KMeansMapper extends
 		Mapper<LongWritable, Text, PointWritable, PointWritable> {
@@ -31,37 +31,25 @@ public class KMeansMapper extends
 		Configuration conf = context.getConfiguration();
 		k = conf.getInt("k", 10);
 		centroids = new PointWritable[k];
-
-		// read centroids
-		Path[] localFiles = DistributedCache.getLocalCacheFiles(context
-				.getConfiguration());
-
-		if (localFiles == null || localFiles.length < 1)
-			throw new IOException("No centroids are provided!");
-
-		for (Path path : localFiles) {
-			String filename = path.toString();
-			if (filename.endsWith("centroids")) {
-				centroids = readCentroids(filename, conf, k);
-			}
-		}
+		centroids = readCentroids(conf, k);
 	}
 
 	/**
 	 * read centroids from a single file.
 	 */
-	public PointWritable[] readCentroids(String centroidFile,
+	public PointWritable[] readCentroids(
 			Configuration conf, int k) throws IOException {
 
-		PointWritable[] centroids = new PointWritable[k];
 		FileSystem fs = FileSystem.get(conf);
-		BufferedReader fis = null;
-		FSDataInputStream in = fs.open(new Path(centroidFile));
+		URI[] cacheFiles = DistributedCache.getCacheFiles(conf);
+		Path getPath = new Path(cacheFiles[0].getPath());
+		BufferedReader bf = null;
 		try {
-			fis = new BufferedReader(new InputStreamReader(in));
+			bf = new BufferedReader(new InputStreamReader(
+					fs.open(getPath)));
 			String line;
 			int i = 0;
-			while ((line = fis.readLine()) != null) {
+			while ((line = bf.readLine()) != null) {
 				centroids[i] = new PointWritable(line);
 				centroids[i].setId(i);
 				i++;
@@ -69,13 +57,11 @@ public class KMeansMapper extends
 			return centroids;
 		} catch (IOException ioe) {
 			System.err
-					.println("Caught exception while parsing the cached file '"
-							+ centroidFile + "'");
+					.println("Caught exception while parsing the cached file");
 			return null;
 		} finally {
-			if (in != null) {
-				fis.close();
-				in.close();
+			if (bf != null) {
+				bf.close();
 			}
 		}
 	}
@@ -93,11 +79,11 @@ public class KMeansMapper extends
 		}
 		return closestCentroid;
 	}
-	
+
 	public void map(LongWritable key, Text value, Context context)
 			throws IOException, InterruptedException {
 
-		point = new PointWritable(value.toString(),1);
+		point = new PointWritable(value.toString(), 1);
 		centroid = closestCentroid(point);
 		context.write(centroid, point);
 	}

@@ -57,7 +57,6 @@ public class Q3 {
 		}
 
 		Configuration conf = new Configuration();
-
 		// set k
 		conf.setInt("k", k);
 
