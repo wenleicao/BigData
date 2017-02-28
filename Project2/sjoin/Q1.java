@@ -62,7 +62,7 @@ public class Q1 {
 				window = new RectangleWritable(-1, Integer.parseInt(split[0]),
 						Integer.parseInt(split[1]), Integer.parseInt(split[2]),
 						Integer.parseInt(split[3]));
-				conf.set("window", "-1"+args[3]);
+				conf.set("window", "-1,"+win);
 			} 
 			else {
 //				default is entire domain space
