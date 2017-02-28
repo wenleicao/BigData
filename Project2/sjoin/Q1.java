@@ -14,6 +14,7 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -42,6 +43,7 @@ public class Q1 {
 	 */
 	public static void main(String[] args) throws Exception {
 
+		Configuration conf = new Configuration();
 		// parse args, initialize values
 		try {
 			input_points = args[0];
@@ -60,22 +62,25 @@ public class Q1 {
 				window = new RectangleWritable(-1, Integer.parseInt(split[0]),
 						Integer.parseInt(split[1]), Integer.parseInt(split[2]),
 						Integer.parseInt(split[3]));
+				conf.set("window", "-1"+args[3]);
 			} 
 			else {
 //				default is entire domain space
 				window = new RectangleWritable(-1, 0, 0, 10000, 10000);
+				conf.set("window", "-1,0,0,10000,10000");
 			}
 			
 //			set grid size between 10 and 1000
 			GRID_SIZE_X = Math.max(window.w/100, 10);
 			GRID_SIZE_Y = Math.max(window.h/100, 10); 
+			conf.setInt("grid_size_x", GRID_SIZE_X);
+			conf.setInt("grid_size_y", GRID_SIZE_Y);
 		} 
 		catch (Exception e) {
 			e.printStackTrace();
 			System.exit(0);
 		}
 
-		Configuration conf = new Configuration();
 
 		// delete old output directories if they exist
 		FileSystem fs = FileSystem.get(conf);
@@ -106,70 +111,7 @@ public class Q1 {
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
 
-	/**
-	 * Find the x index of a grid cell.
-	 * 
-	 * @param x
-	 * @return
-	 */
-	public static int getIndexX(int x) {
-		return (x - window.x) / GRID_SIZE_X;
-	}
 
-	/**
-	 * Find the y index of a grid cell.
-	 * 
-	 * @param y
-	 * @return
-	 */
-	public static int getIndexY(int y) {
-		return (y - window.y) / GRID_SIZE_Y;
-	}
-
-	/**
-	 * hash a point into a grid cell.
-	 * 
-	 * @param min
-	 * @param max
-	 * @param numBuckets
-	 * @return index number
-	 */
-	public static int gridHash(int x, int y) {
-
-		// compute grid index (uses Cantor's enumeration of pairs).
-		int n = ((x + y) * (x + y + 1) / 2) + y;
-		return n;
-	}
-
-	/**
-	 * Hash a rectangle to a set of grid indices.
-	 * 
-	 * @param min
-	 * @param max
-	 * @param numBuckets
-	 * @return matrix of indices
-	 */
-	public static int[][] gridHash(RectangleWritable r) {
-
-		// get range of indices for each dimension
-		int start_x = getIndexX(r.x);
-		int end_x = getIndexX(r.x + r.w);
-		int start_y = getIndexX(r.y);
-		int end_y = getIndexX(r.y + r.h);
-
-		int range_x = end_x - start_x + 1;
-		int range_y = end_y - start_y + 1;
-		int[][] xy_indices = new int[range_x][range_y];
-
-//		build matrix index values
-		for (int i = 0; i < range_x; i++) {
-			for (int j = 0; j < range_y; j++) {
-				xy_indices[i][j] = gridHash(start_x + i, start_y + j);
-			}
-		}
-		return xy_indices;
-
-	}
 	/**
 	 * Map points to grid cells.
 	 *
@@ -180,7 +122,84 @@ public class Q1 {
 		private static IntWritable index = new IntWritable();
 		private static Geometry g = new Geometry();
 		private static PointWritable point = new PointWritable();
+		private static RectangleWritable window;
 
+		private static int GRID_SIZE_X;
+		private static int GRID_SIZE_Y;
+		
+		/**
+		 * Find the x index of a grid cell.
+		 * 
+		 * @param x
+		 * @return
+		 */
+		public static int getIndexX(int x) {
+			return (x - window.x) / GRID_SIZE_X;
+		}
+
+		/**
+		 * Find the y index of a grid cell.
+		 * 
+		 * @param y
+		 * @return
+		 */
+		public static int getIndexY(int y) {
+			return (y - window.y) / GRID_SIZE_Y;
+		}
+
+		/**
+		 * hash a point into a grid cell.
+		 * 
+		 * @param min
+		 * @param max
+		 * @param numBuckets
+		 * @return index number
+		 */
+		public static int gridHash(int x, int y) {
+
+			// compute grid index (uses Cantor's enumeration of pairs).
+			int n = ((x + y) * (x + y + 1) / 2) + y;
+			return n;
+		}
+
+		/**
+		 * Hash a rectangle to a set of grid indices.
+		 * 
+		 * @param min
+		 * @param max
+		 * @param numBuckets
+		 * @return matrix of indices
+		 */
+		public static int[][] gridHash(RectangleWritable r) {
+
+			// get range of indices for each dimension
+			int start_x = getIndexX(r.x);
+			int end_x = getIndexX(r.x + r.w);
+			int start_y = getIndexX(r.y);
+			int end_y = getIndexX(r.y + r.h);
+
+			int range_x = end_x - start_x + 1;
+			int range_y = end_y - start_y + 1;
+			int[][] xy_indices = new int[range_x][range_y];
+
+//			build matrix index values
+			for (int i = 0; i < range_x; i++) {
+				for (int j = 0; j < range_y; j++) {
+					xy_indices[i][j] = gridHash(start_x + i, start_y + j);
+				}
+			}
+			return xy_indices;
+
+		}
+		
+		@Override
+		protected void setup(Context context) throws IOException,
+		InterruptedException {
+			Configuration conf = context.getConfiguration();
+			GRID_SIZE_X = conf.getInt("grid_size_x", 10);
+			GRID_SIZE_Y = conf.getInt("grid_size_y", 10);
+			window = new RectangleWritable(conf.get("window"));
+		}
 
 		public void map(LongWritable key, Text value, Context context)
 				throws IOException, InterruptedException {
@@ -211,8 +230,82 @@ public class Q1 {
 		private IntWritable index = new IntWritable();
 		private static Geometry g = new Geometry();
 		private RectangleWritable rectangle = new RectangleWritable();
+		private static RectangleWritable window;
 
+		private static int GRID_SIZE_X;
+		private static int GRID_SIZE_Y;
+
+		/**
+		 * Find the x index of a grid cell.
+		 * 
+		 * @param x
+		 * @return
+		 */
+		public static int getIndexX(int x) {
+			return (x - window.x) / GRID_SIZE_X;
+		}
+
+		/**
+		 * Find the y index of a grid cell.
+		 * 
+		 * @param y
+		 * @return
+		 */
+		public static int getIndexY(int y) {
+			return (y - window.y) / GRID_SIZE_Y;
+		}
+
+		/**
+		 * hash a point into a grid cell.
+		 * 
+		 * @param min
+		 * @param max
+		 * @param numBuckets
+		 * @return index number
+		 */
+		public static int gridHash(int x, int y) {
+			// compute grid index (uses Cantor's enumeration of pairs).
+			int n = ((x + y) * (x + y + 1) / 2) + y;
+			return n;
+		}
+
+		/**
+		 * Hash a rectangle to a set of grid indices.
+		 * 
+		 * @param min
+		 * @param max
+		 * @param numBuckets
+		 * @return matrix of indices
+		 */
+		public static int[][] gridHash(RectangleWritable r) {
+			// get range of indices for each dimension
+			int start_x = getIndexX(r.x);
+			int end_x = getIndexX(r.x + r.w);
+			int start_y = getIndexX(r.y);
+			int end_y = getIndexX(r.y + r.h);
+
+			int range_x = end_x - start_x + 1;
+			int range_y = end_y - start_y + 1;
+			int[][] xy_indices = new int[range_x][range_y];
+
+//			build matrix index values
+			for (int i = 0; i < range_x; i++) {
+				for (int j = 0; j < range_y; j++) {
+					xy_indices[i][j] = gridHash(start_x + i, start_y + j);
+				}
+			}
+			return xy_indices;
+
+		}
 		
+		@Override
+		protected void setup(Context context) throws IOException,
+		InterruptedException {
+			Configuration conf = context.getConfiguration();
+			GRID_SIZE_X = conf.getInt("grid_size_x", 10);
+			GRID_SIZE_Y = conf.getInt("grid_size_y", 10);
+			window = new RectangleWritable(conf.get("window"));
+		}
 		
 		public void map(LongWritable key, Text value, Context context)
 				throws IOException, InterruptedException {

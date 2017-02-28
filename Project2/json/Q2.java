@@ -32,9 +32,6 @@ public class Q2 {
 		}
 
 		Configuration conf = new Configuration();
-//		conf.setInt("mapreduce.input.fileinputformat.split.maxsize", 193524);
-//		conf.setInt("mapreduce.input.fileinputformat.split.minsize", 193524);
-//		conf.setInt("mapreduce.job.maps",5);
 		
 		// delete old output directories if they exist
 		FileSystem fs = FileSystem.get(conf);
@@ -53,14 +50,6 @@ public class Q2 {
 		job.setOutputValueClass(IntWritable.class);
 
 		FileInputFormat.addInputPath(job, new Path(input));
-		// FileSystem fs = FileSystem.get(conf);
-		// Path P = new Path(input);
-		// FileInputFormat.addInputPath(job, P);
-		// get file size
-		// long length = fs.getFileStatus(P).getLen();
-		// set min size of input split to 1/5 of file size, force split less
-		// than 64mb
-		// FileInputFormat.setMinInputSplitSize(job, (long)length/5);
 
 		FileOutputFormat.setOutputPath(job, new Path(output));
 
