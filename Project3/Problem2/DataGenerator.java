@@ -16,10 +16,10 @@ public class DataGenerator {
 		
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter("D:\\points.csv"));
-				for (id = 1; id < 10000000; id++) {
+				for (id = 1; id < 12000000; id++) {
 				x = random.nextInt(10000) + 1;
 				y = random.nextInt(10000) + 1;
-				bw.write(x + "," + y + "\r\n");
+				bw.write(x + "," + y + "\n");
 				
 			}
 				bw.flush();

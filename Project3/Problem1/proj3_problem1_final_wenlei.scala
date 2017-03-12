@@ -1,4 +1,6 @@
 import org.apache.spark.sql.types._
+val sqlContext = new org.apache.spark.sql.SQLContext(sc)
+
 //val T = sc.textFile("file:///home/mqp/Documents/transactions.csv")
 
 // Create an RDD
@@ -35,10 +37,10 @@ val T2= sqlContext.sql("select TransNumItems, sum(TransTotal), sum(TransTotal)/c
 T2.show()
 
 
-//write T_DataFrame and T1 into parquet file in case they are replaced in memory
+/*write T_DataFrame and T1 into parquet file in case they are replaced in memory
 import spark.implicits._
 T_DataFrame.write.parquet("Transaction.parquet")
-T1.write.parquet("T1.parquet")
+T1.write.parquet("T1.parquet") */
 
 //Q4. over T1, group by customerid and transcation count
 val T3= sqlContext.sql("select CustID, Count(*) as transactioncount from transaction1 group by CustID")

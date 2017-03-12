@@ -30,7 +30,7 @@ public class pointcellmap {
 				int y = Integer.parseInt(Points [1]);
 				int cellnumber = (int)Math.floor((y-10000)*(-1)/20)*500 + (int)(Math.floor(x/20+1));
 				//System.out.println(x+","+y+","+cellnumber);
-				sOutput = sOutput.append(x+","+y+","+cellnumber + "\r\n");
+				sOutput = sOutput.append(x+","+y+","+cellnumber + "\n");
 				
 			}
 			bw.write(sOutput.toString());
