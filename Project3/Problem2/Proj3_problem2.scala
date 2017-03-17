@@ -1,63 +1,126 @@
-//create dataframe for point cell map
 
-import org.apache.spark.sql.types._
-import org.apache.spark.sql.Row
-val sqlContext = new org.apache.spark.sql.SQLContext(sc)
-val PC = spark.sparkContext.textFile("file:///home/mqp/Documents/pointsMap.csv")
-val schemaString = "x y cell"
-val fields = schemaString.split(" ").map(fieldName => StructField(fieldName, StringType, nullable = true))
-val schema = StructType(fields)
-val rowRDD = PC.map(_.split(",")).map(attributes => Row(attributes(0),attributes(1),attributes(2).trim))
-val PC_DF = spark.createDataFrame(rowRDD, schema)
-PC_DF.createOrReplaceTempView("PointsCellMap")
-val PC1 = sqlContext.sql("SELECT * FROM PointsCellMap")
-PC1.show()
+//need  cell  pointcount
 
+val PC = sc.textFile("file:///home/mqp/Documents/pointsMap.csv")
 
+// get only cell number and map each record with 1, to do point count
+
+val PC_Count = PC.map(rec => (rec.split(",")(2).toInt, 1))
+
+//do point count
+val cellpointcount = PC_Count.countByKey()
+
+//collection to RDD
+val cellpointcountRDD = sc.parallelize(cellpointcount.toSeq,1)
 
 
-//create dataframe for cell-neighbor cell map
- 
-val CNC = spark.sparkContext.textFile("file:///home/mqp/Documents/cell-neighbor-mapping.csv")
-val schemaString = "cell neighbor_cell"
-val fields = schemaString.split(" ").map(fieldName => StructField(fieldName, StringType, nullable = true))
-val schema = StructType(fields)
-val rowRDD = CNC.map(_.split(",")).map(attributes => Row(attributes(0),attributes(1).trim))
-val CNC_DF = spark.createDataFrame(rowRDD, schema)
-CNC_DF.createOrReplaceTempView("NeighborCellMap")
-val CNC1 = sqlContext.sql("SELECT * FROM NeighborCellMap where neighbor_cell >0 and neighbor_cell <=250000" )
-CNC1.show()
-//create view for real neighborCellmap
-CNC1.createOrReplaceTempView("RealNeighborCellMap")
+
+//need cell neighbor cell count
+
+val NC = sc.textFile("file:///home/mqp/Documents/cell-neighbor-mapping.csv")
+//filter in only between cell 1 and cell 250000
+val RNC = NC.map(rec=>(rec.split(",")(0).toInt, rec.split(",")(1).toInt)).filter(x=>x._2> 0).filter(x=>x._2< 250001)
 
 
-//need to first get how many point in each cell
-val PointCountInCell = sqlContext.sql("SELECT cell, count(*) as PointCount from PointsCellMap group by cell")
-PointCountInCell.show() 
-PointCountInCell.createOrReplaceTempView("CellPointCount")
+//cell neighbor cell count
+val cellneighborcellcount = RNC.countByKey()
+
+//collection to RDD
+val cellneighborcellcountRDD = sc.parallelize(cellneighborcellcount.toSeq,1)
 
 
-//need to calculate each cell's neighbor cell totoal count and cell number for calcuate average
- 
-val NeigborCellPointCount = sqlContext.sql("select ncm.cell, sum(cpc.Pointcount) as NeighborPointCount, count(neighbor_cell) as NeighborCellCount from CellPointCount cpc inner join RealNeighborCellMap ncm where ncm.neighbor_cell = cpc.cell group by ncm.cell")
-NeigborCellPointCount.show()
-NeigborCellPointCount.createOrReplaceTempView("NeighborCellPointCount")
+
+//need cell neighbor cell point count,  use NC, but need to use neighbor cell for join, therefore reverse the squence in tuple
+
+val RNC_Reverse = RNC.map(x=>(x._2, x._1))
+
+//join cellpointcountRDD with RNC_Reverse based on they key   (neighborcell (cell, cell count))
+
+val cellneighborcelljoin = cellpointcountRDD.join(RNC_Reverse)
+
+//need to adjust the tuple, to let cell number as key to calculate  cell neighbor cell point count
+
+val neighborcellpointcount = cellneighborcelljoin.map(rec=>(rec._2._2, rec._2._1))
+
+//sum the value based on cell number
+
+val neighborcellpointcountRDD = neighborcellpointcount.reduceByKey((acc, value)=>acc+value)
 
 
-//calculate the Relative Density index based on formula, list top 50
-val Top50RDICell = sqlContext.sql("select ncp.cell,  cpc.PointCount/(ncp.NeighborPointCount/ncp.NeighborCellCount) as Relative_Density_index from CellPointCount cpc inner join NeighborCellPointCount ncp where ncp.cell = cpc.cell order by cpc.PointCount/(ncp.NeighborPointCount/ncp.NeighborCellCount) desc limit 50")
-Top50RDICell.collect().foreach(println)
 
 
-//report neighbor cell id and their RDI
-Top50RDICell.createOrReplaceTempView("Top50RDICell")
-val neighborCellinfo =sqlContext.sql("select t50.cell, ncm.neighbor_cell, cpc.PointCount/(ncp.NeighborPointCount/ncp.NeighborCellCount) as neighbor_Relative_Density_index  from Top50RDICell t50 inner join RealNeighborCellMap ncm inner join CellPointCount cpc inner join NeighborCellPointCount ncp where t50.cell = ncm.cell and ncm.neighbor_cell =cpc.cell and ncm.neighbor_cell =ncp.cell order by t50.cell, ncm.neighbor_cell ")
+//need to join these three dataset togehter to calculate index
 
-//show only 20
-neighborCellinfo.show()
+val pointjoin2 = cellpointcountRDD.join(cellneighborcellcountRDD) 
 
-//show all
-neighborCellinfo.collect().foreach(println)
+val pointjoin3 = pointjoin2.join(neighborcellpointcountRDD)
+
+
+//after two join, it form such structure    spark.rdd.RDD[(Int, ((Long, Long), Long))]
+// int is cell number,  first long   cellpointcount   rec._2._1._1;  second long:neighbor cell count: rec._2._1._2; third long  neighbor cell point count: rec._2._2
+//per formula  x / (y/cell count)
+//use toFloat to show decimal
+
+val RelativeDensityIndex = pointjoin3.map(rec=>(rec._1, (rec._2._1._1.toFloat/(rec._2._2/rec._2._1._2))) )   
+
+//show some vlaue of RDI
+RelativeDensityIndex.take(5).foreach(println)
+
+
+//list first 50 based on the value of relative density index
+
+val RDI_top50 = RelativeDensityIndex.takeOrdered(50)(Ordering[Float].reverse.on(x=>x._2))
+
+
+//show top 50 cell and RDI
+RDI_top50.take(50).foreach(println) 
+
+
+//need to get top 50 cell's neighbor cell number  and its RDI
+//first join the RDI_top50 to RNC to get their neibor cell
+// remap it into a RNC_reverse1  (neighbor cell, cell)
+//RelativeDensityIndex contain all cell number and corresponding RDI,  we need to join  RNC_reverse1,  neighbor cell number, so we get (neighbor cell,  (RDI, cell)), once we get result, we remap the position and then got top 50 of them
+
+//first convert RDI_top50 to RDD
+
+val RDI_top50_RDD= sc.parallelize(RDI_top50.toSeq,1)
+
+val top50neigborcell = RDI_top50_RDD.join(RNC)
+
+// joint result (Int, (Float, Int)) = (111635,(1.7045455,111134)), need to pick neigbor cell, rec._2._2 and current cell,  rec._1
+val RNC_reverse1 = top50neigborcell.map(rec=>(rec._2._2, rec._1))
+
+// RelativeDensityIndex  join with RNC_reverse1
+val RDI_top50_neighborRDI = RelativeDensityIndex.join(RNC_reverse1)
+
+//result structure res12: (Int, (Float, Int)) = (177102,(1.1702127,177103)), neibor cell, RDI, and cell, I need to remap and show all
+
+val top50cell_neighborcell_RDI= RDI_top50_neighborRDI.map(rec=>(rec._2._2,rec._1, rec._2._1 ))
+
+//show all sort by cell numer 
+
+top50cell_neighborcell_RDI.sortBy(_._1).collect().foreach(println)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
