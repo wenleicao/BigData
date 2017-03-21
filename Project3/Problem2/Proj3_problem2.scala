@@ -1,23 +1,41 @@
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkConf
+import org.apache.spark.rdd
+import java.lang.Math
 
-//need  cell  pointcount
+//define helper functions
+object Functions{
+    def findCell(p:Array[Int]): Int = {
+        Math.floor((p.apply(1)-10000)*(-1)/20).toInt * 500 + Math.floor(p.apply(0)/20+1).toInt
+    }
+}
 
-val PC = sc.textFile("file:///home/mqp/Documents/pointsMap.csv")
+//read point data
+val points = sc.textFile("/home/mqp/BigData/Project3/Problem2/points.csv")
+
+
+//count the number of points in each cell
+
+//mapper outputs one record for each point in cell
+val cellpointcountRDD = points.map(point => (Functions.findCell(point.split(",").map(_.toInt)), 1)).reduceByKey(_ + _)
+
+//cellpointcountRDD.take(5).foreach(println)
 
 // get only cell number and map each record with 1, to do point count
 
-val PC_Count = PC.map(rec => (rec.split(",")(2).toInt, 1))
+//val PC_Count = PC.map(rec => (rec.split(",")(2).toInt, 1))
 
 //do point count
-val cellpointcount = PC_Count.countByKey()
+//val cellpointcount = PC_Count.countByKey()
 
 //collection to RDD
-val cellpointcountRDD = sc.parallelize(cellpointcount.toSeq,1)
+//val cellpointcountRDD = sc.parallelize(cellpointcount.toSeq,1)
 
 
 
 //need cell neighbor cell count
 
-val NC = sc.textFile("file:///home/mqp/Documents/cell-neighbor-mapping.csv")
+val NC = sc.textFile("/home/mqp/BigData/Project3/Problem2/cell-neighbor-mapping.csv")
 //filter in only between cell 1 and cell 250000
 val RNC = NC.map(rec=>(rec.split(",")(0).toInt, rec.split(",")(1).toInt)).filter(x=>x._2> 0).filter(x=>x._2< 250001)
 
