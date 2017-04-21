@@ -67,6 +67,17 @@ var descendants = [];
 var stack = [];
 var item = db.categories_c.findOne({_id: "Books"});
 stack.push(item);
+while (stack.length > 0) {
+	var current = stack.pop();
+        var children =  db.categories_c.find( {_id:{$in:current.children}});
+	while (children.hasNext() == true) {
+		var child = children.next();
+		descendants.push(child._id);
+		stack.push(child);
+	}
+		
+}
+descendants
 
 
 Q1.5 Assume we model the records and relationships in Figure 1 using the Child-Referencing model (Slide 54 in MongoDB-2). Write a query to report the siblings ¡°Databases¡±
