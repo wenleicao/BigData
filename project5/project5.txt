@@ -432,18 +432,15 @@ db.test.createIndex ({"awards.award":"text"})
 db.test.find({$text:{$search:"\"Turing Award\""}})
 
 //Q2.5 Use the $text operator to search for and report all documents containing either ¡°Turing¡± or ¡°National Medal¡±. 
-http://stackoverflow.com/questions/28428288/mongodb-logical-or-when-searching-for-words-and-phrases-using-full-text-search
 
+//based on this link, this is not possible 
+//http://stackoverflow.com/questions/28428288/mongodb-logical-or-when-searching-for-words-and-phrases-using-full-text-search
 
+//this one is actually logic and
 db.test.find({$text:{$search:"\"Turing\" \"National Medal\""}})
 
-db.words.find({"name": {$in : [/john cooper/, /mike serpsky/]}})
 
+//this is give correct result without use text search
 db.test.find({"awards.award": {$in : [/Turing/, /National Medal/]}})
 
 
-db.test.find({$or:[{$text:{$search:"Turing"}}]})
-,{$text:{$search:"\"National Medal\""}} 
-
-db.test.createIndex ({"awards.award":"text"})
-db.test.find({$or:[{$text:{$search:"Turing"}}, {$text:{$search:"\"National Medal\""}}]})
